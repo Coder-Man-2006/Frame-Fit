@@ -1,28 +1,26 @@
 import cv2
 import mediapipe as mp
-import time
-import os
 import numpy as np
+import os
 
 class FaceMap:
     def __init__(self, filtered_landmarks):
         self.filtered_landmarks = filtered_landmarks
 
 class Skeleton(FaceMap):
-    def __init__(self, filtered_landmarks, indices):
-        super().__init__(filtered_landmarks)
-        self.indices = indices
+    def __init__(self, points):
+        self.points = points
         self.total_distance_list = []
 
     def find_distance(self):
-        self.total_distance = 0.0
-        for i in range(len(self.indices) - 1):
+        total_distance = 0.0
+        for i in range(len(self.points) - 1):
             if len(self.total_distance_list) >= 10:
-                break  # Add this line
-            point1 = self.filtered_landmarks[self.indices[i]]
-            point2 = self.filtered_landmarks[self.indices[i + 1]]
-            distance = np.sqrt((point2[0] - point1[0])**2 + (point2[1] - point1[1])**2)
-            self.total_distance += distance
+                break
+            point1 = self.points[i]
+            point2 = self.points[i + 1]
+            distance = np.sqrt((point2 - point1) ** 2)
+            total_distance += distance
             self.total_distance_list.append(distance)
 
 class FaceAnalyzer:
@@ -32,9 +30,6 @@ class FaceAnalyzer:
         self.mpDraw = mp.solutions.drawing_utils
         self.mpFaceMesh = mp.solutions.face_mesh
         self.faceMesh = self.mpFaceMesh.FaceMesh(max_num_faces=1)
-        self.screenshot_folder = "gallery"
-        self.screenshot_count = 1
-        os.makedirs(self.screenshot_folder, exist_ok=True)
         self.scaling_factor = 400 / 63
         self.max_landmarks = 400
         self.all_indices = self.get_all_indices()
@@ -53,25 +48,7 @@ class FaceAnalyzer:
         return chin_indices + left_eyebrow_indices + right_eyebrow_indices + \
                nose_bridge_indices + nose_tip_indices + left_eye_indices + \
                right_eye_indices + top_lip_indices + bottom_lip_indices
-
-    def calculate_distances(self, filtered_landmarks):
-        length_of_face_indices = [0, 8]
-        temple_to_temple_indices = [68, 104, 69, 119, 299, 333, 298]
-        cheekbone_to_cheekbone_indices = [0, 2, 4, 12, 14, 16]
-        jawline_indices = [0, 17]
-
-        length_of_face_class = Skeleton(filtered_landmarks, length_of_face_indices)
-        temple_to_temple_class = Skeleton(filtered_landmarks, temple_to_temple_indices)
-        cheekbone_to_cheekbone_class = Skeleton(filtered_landmarks, cheekbone_to_cheekbone_indices)
-        jawline_class = Skeleton(filtered_landmarks, jawline_indices)
-
-        return (
-            length_of_face_class.find_distance(),
-            temple_to_temple_class.find_distance(),
-            cheekbone_to_cheekbone_class.find_distance(),
-            jawline_class.find_distance()
-        )
-
+               
     def detect_face_shape(self, filtered_landmarks):
         distances = self.calculate_distances(filtered_landmarks)
         non_none_distances = [d for d in distances if d is not None]
@@ -83,51 +60,80 @@ class FaceAnalyzer:
         else:
             return "Shape Detection Not Possible"
 
+    def calculate_distances(self, filtered_landmarks):
 
+        distances = []
+
+        for point1, point2 in zip(filtered_landmarks, filtered_landmarks[1:]):
+            distance = np.sqrt((point2[0] - point1[0]) ** 2 + (point2[1] - point1[1]) ** 2)
+            
+            distances.append(distance)
+
+        return distances
+
+    # ... (other methods like detect_face_shape and draw_landmarks remain the same)
+    
     def draw_landmarks(self, frame, filtered_landmarks, distances): 
-        print("Distances:", distances)  # Print the distances array to debug
-        for landmark in filtered_landmarks:
-            cv2.circle(frame, landmark, 2, (0, 0, 255), -1)
-        
-        # Check if distances is not None before formatting
-        if distances[0] is not None:
-            cv2.putText(frame, f"Length of Face: {distances[0]:.2f}", (20, 100), cv2.FONT_HERSHEY_PLAIN,
-                        2, (255, 0, 0), 2)
-        if distances[1] is not None:
-            cv2.putText(frame, f"Temple to Temple: {distances[1]:.2f}", (20, 150), cv2.FONT_HERSHEY_PLAIN,
-                        2, (255, 0, 0), 2)
-        if distances[2] is not None:
-            cv2.putText(frame, f"Cheekbone to Cheekbone: {distances[2]:.2f}", (20, 200), cv2.FONT_HERSHEY_PLAIN,
-                        2, (255, 0, 0), 2)
-        if distances[3] is not None:
-            cv2.putText(frame, f"Jawline: {distances[3]:.2f}", (20, 250), cv2.FONT_HERSHEY_PLAIN,
-                        2, (255, 0, 0), 2)
-        
-        face_shape = self.detect_face_shape(filtered_landmarks)
-        cv2.putText(frame, f"Face Shape: {face_shape}", (20, 300), cv2.FONT_HERSHEY_PLAIN,
-                    2, (0, 0, 255), 2)
-        cv2.imshow('Face Landmarks', frame)
+            print("Distances:", distances)  # Print the distances array to debug
+            for landmark in filtered_landmarks:
+                cv2.circle(frame, landmark, 2, (0, 0, 255), -1)
 
+            if distances[0] is not None:
+                cv2.putText(frame, f"Length of Face: {distances[0]:.2f}", (20, 100), cv2.FONT_HERSHEY_PLAIN,
+                            2, (255, 0, 0), 2)
+            if distances[1] is not None:
+                cv2.putText(frame, f"Temple to Temple: {distances[1]:.2f}", (20, 150), cv2.FONT_HERSHEY_PLAIN,
+                            2, (255, 0, 0), 2)
+            if distances[2] is not None:
+                cv2.putText(frame, f"Cheekbone to Cheekbone: {distances[2]:.2f}", (20, 200), cv2.FONT_HERSHEY_PLAIN,
+                            2, (255, 0, 0), 2)
+            if distances[3] is not None:
+                cv2.putText(frame, f"Jawline: {distances[3]:.2f}", (20, 250), cv2.FONT_HERSHEY_PLAIN,
+                            2, (255, 0, 0), 2)
+            
+            face_shape = self.detect_face_shape(filtered_landmarks)
+            cv2.putText(frame, f"Face Shape: {face_shape}", (20, 300), cv2.FONT_HERSHEY_PLAIN,
+                        2, (0, 0, 255), 2)
+            cv2.imshow('Face Landmarks', frame)
 
     def run(self):
+        screenshot_folder = "gallery"
+        os.makedirs(screenshot_folder, exist_ok=True)
+        screenshot_count = 1
+        
         while True:
+            key = cv2.waitKey(1)
             ret, frame = self.cap.read()
             if not ret:
                 break
             imgRGB = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             results = self.faceMesh.process(imgRGB)
+                    
             if results.multi_face_landmarks:
                 for faceLms in results.multi_face_landmarks:
                     face_landmarks = [(int(landmark.x * frame.shape[1]), int(landmark.y * frame.shape[0]))
-                                      for landmark in faceLms.landmark]
+                                    for landmark in faceLms.landmark]
                     filtered_landmarks = [face_landmarks[i] for i in self.all_indices]
                     distances = self.calculate_distances(filtered_landmarks)
                     self.draw_landmarks(frame, filtered_landmarks, distances)
+                    
+                    total_distance = 0.0
+                
+            if key == ord('q'):
+                break
+            elif key == ord('s'):
+                # Press 's' to capture and save a screenshot
+                screenshot_path = os.path.join(screenshot_folder, f"capture{str(screenshot_count)}.jpg")
+                cv2.imwrite(screenshot_path, frame)
+                print(f"Screenshot saved as {screenshot_path}")
+                screenshot_count += 1
+                # Convert the total distance to centimeters using the conversion factor
+                # real_world_distance = total_distance * conversion_factor
+                # print(f"Real-world distance: {real_world_distance:.2f} cm")
+
         self.cap.release()
         cv2.destroyAllWindows()
-        
 
 if __name__ == "__main__":
     face_analyzer = FaceAnalyzer()
     face_analyzer.run()
-    
