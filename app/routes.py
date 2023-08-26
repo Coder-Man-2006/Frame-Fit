@@ -1,4 +1,4 @@
-from flask import render_template, request, url_for
+from flask import render_template, request
 from app import app
 from PIL import Image, ImageDraw
 
@@ -17,3 +17,8 @@ def index():
         img.save(f"app/{img_path}")
         
     return render_template('index.html', img_path=img_path)
+
+@app.route('/run_python_code', methods=['POST'])
+def run_python_code():
+    print('webcam active: true')
+    return 'Python code executed successfully'

@@ -1,12 +1,31 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<form action="/" method="post">
-    Enter a number: <input type="number" name="number">
-    <input type="submit" value="Submit">
-</form>
+<h1>Webcam Test</h1>
+<video id="webcam" autoplay playsinline></video>
 
-{% if img_path %}
-    <img src="{{ url_for('static', filename=img_path.split('static/')[1]) }}" alt="Generated Image">
-{% endif %}
+<script>
+    async function openWebcam() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            const webcamVideo = document.getElementById('webcam');
+            webcamVideo.srcObject = stream;
+
+            // Call the Python code execution function here
+            executePythonCode();
+        } catch (error) {
+            console.error('Error accessing webcam:', error);
+        }
+    }
+
+    function executePythonCode() {
+        // Send a request to the backend to execute the Python code
+        fetch('/run_python_code', { method: 'POST' })
+            .then(response => response.text())
+            .then(result => console.log(result))
+            .catch(error => console.error('Error executing Python code:', error));
+    }
+
+    openWebcam();
+</script>
 {% endblock %}
