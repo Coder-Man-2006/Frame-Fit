@@ -60,17 +60,6 @@ class FaceAnalyzer:
             return "Oval" if max_dist - min_dist < 0.02 else "Other Shape"
         else:
             return "Shape Detection Not Possible"
-
-    # def calculate_distances(self, filtered_landmarks):
-
-    #     distances = []
-
-    #     for point1, point2 in zip(filtered_landmarks, filtered_landmarks[1:]):
-    #         distance = np.sqrt((point2[0] - point1[0]) ** 2 + (point2[1] - point1[1]) ** 2)
-            
-    #         distances.append(distance)
-
-    #     return distances
     
     def calculate_distances(self, filtered_landmarks, ppi):
         distances = []
@@ -92,8 +81,6 @@ class FaceAnalyzer:
             distances.append(distance)
 
         return distances
-
-    # ... (other methods like detect_face_shape and draw_landmarks remain the same)
     
     def draw_landmarks(self, frame, filtered_landmarks, distances): 
            # Draw lines for specific measurements
@@ -109,13 +96,13 @@ class FaceAnalyzer:
             cheekbone_to_cheekbone = [280, 371, 281, 51, 110, 50]
             jawline_points = [366, 361, 288, 397, 365, 379, 378, 369, 377, 120, 176, 117, 118, 168, 172, 58, 164, 93, 234]
             for i in range(len(length_of_face) - 1):
-                cv2.line(frame, filtered_landmarks[length_of_face[i]], filtered_landmarks[length_of_face[i + 1]], (0, 255, 0), 2)
+                cv2.line(frame, filtered_landmarks[length_of_face[i]], filtered_landmarks[length_of_face[i + 1]], (245, 245, 220), 2)
             for i in range(len(temple_to_temple) - 1):
                 cv2.line(frame, filtered_landmarks[temple_to_temple[i]], filtered_landmarks[temple_to_temple[i + 1]], (0, 255, 0), 2)
             for i in range(len(cheekbone_to_cheekbone) - 1):
-                cv2.line(frame, filtered_landmarks[cheekbone_to_cheekbone[i]], filtered_landmarks[cheekbone_to_cheekbone[i + 1]], (0, 255, 0), 2)
+                cv2.line(frame, filtered_landmarks[cheekbone_to_cheekbone[i]], filtered_landmarks[cheekbone_to_cheekbone[i + 1]], (176,224,230), 2)
             for i in range(len(jawline_points) - 1):
-                cv2.line(frame, filtered_landmarks[jawline_points[i]], filtered_landmarks[jawline_points[i + 1]], (0, 255, 0), 2)
+                cv2.line(frame, filtered_landmarks[jawline_points[i]], filtered_landmarks[jawline_points[i + 1]], (128,0,128), 2)
                 
         print("Distances:", distances)  # Print the distances array to debug
         for landmark in filtered_landmarks:
@@ -177,9 +164,6 @@ class FaceAnalyzer:
                 cv2.imwrite(screenshot_path, frame)
                 print(f"Screenshot saved as {screenshot_path}")
                 screenshot_count += 1
-                # Convert the total distance to centimeters using the conversion factor
-                # real_world_distance = total_distance * conversion_factor
-                # print(f"Real-world distance: {real_world_distance:.2f} cm")
             
         measurement_df.to_csv("measurements.csv", index=False)
 
