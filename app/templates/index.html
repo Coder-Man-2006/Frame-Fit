@@ -1,0 +1,12 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<form action="/" method="post">
+    Enter a number: <input type="number" name="number">
+    <input type="submit" value="Submit">
+</form>
+
+{% if img_path %}
+    <img src="{{ url_for('static', filename=img_path.split('static/')[1]) }}" alt="Generated Image">
+{% endif %}
+{% endblock %}
