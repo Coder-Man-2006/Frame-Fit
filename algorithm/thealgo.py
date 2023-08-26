@@ -3,6 +3,7 @@ import mediapipe as mp
 import numpy as np
 import pandas as pd
 import os
+from PIL import Image
 
 class FaceMap:
     def __init__(self, filtered_landmarks):
@@ -26,8 +27,6 @@ class Skeleton(FaceMap):
 
 class FaceAnalyzer:
     def __init__(self):
-        self.cap = cv2.VideoCapture(0)
-        self.pTime = 0
         self.mpDraw = mp.solutions.drawing_utils
         self.mpFaceMesh = mp.solutions.face_mesh
         self.faceMesh = self.mpFaceMesh.FaceMesh(max_num_faces=1)
@@ -36,7 +35,6 @@ class FaceAnalyzer:
         self.all_indices = self.get_all_indices()
 
     def get_all_indices(self):
-        # Custom list of landmark indices for different parts of the face
         chin_indices = list(range(0, int(17 * self.scaling_factor)))
         left_eyebrow_indices = list(range(int(22 * self.scaling_factor), int(27 * self.scaling_factor)))
         right_eyebrow_indices = list(range(int(17 * self.scaling_factor), int(22 * self.scaling_factor)))
@@ -81,6 +79,10 @@ class FaceAnalyzer:
             distances.append(distance)
 
         return distances
+<<<<<<< HEAD:algorithm/app.py
+=======
+
+>>>>>>> 0e012ddcdb7721a5fd088bc6176c857d78da5207:algorithm/thealgo.py
     
     def draw_landmarks(self, frame, filtered_landmarks, distances): 
            # Draw lines for specific measurements
@@ -125,6 +127,20 @@ class FaceAnalyzer:
             cv2.putText(frame, f"Face Shape: {face_shape}", (20, 300), cv2.FONT_HERSHEY_PLAIN,
                         2, (0, 0, 255), 2)
             cv2.imshow('Face Landmarks', frame)
+
+    def process_single_image(self, pil_image):
+        """Process an individual PIL Image."""
+        frame = np.array(pil_image)
+        imgRGB = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        results = self.faceMesh.process(imgRGB)
+        if results.multi_face_landmarks:
+            for faceLms in results.multi_face_landmarks:
+                face_landmarks = [(int(landmark.x * frame.shape[1]), int(landmark.y * frame.shape[0]))
+                                for landmark in faceLms.landmark]
+                filtered_landmarks = [face_landmarks[i] for i in self.all_indices]
+                distances = self.calculate_distances(filtered_landmarks)
+                self.draw_landmarks(frame, filtered_landmarks, distances)
+        return Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
 
     def run(self):
         screenshot_folder = "gallery"
