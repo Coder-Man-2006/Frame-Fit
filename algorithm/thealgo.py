@@ -51,12 +51,16 @@ class FaceAnalyzer:
         distances = self.calculate_distances(filtered_landmarks)
         non_none_distances = [d for d in distances if d is not None]
 
-        if len(non_none_distances) > 1:
-            min_dist = np.min(non_none_distances)
-            max_dist = np.max(non_none_distances)
-            return "Oval" if max_dist - min_dist < 0.02 else "Other Shape"
-        else:
-            return "Shape Detection Not Possible"
+        #if len(non_none_distances) > 1:
+        min_dist = np.min(non_none_distances)
+        max_dist = np.max(non_none_distances)
+            #return "Oval" if max_dist - min_dist < 0.02 else "Other Shape"
+        #else:
+            #return "Shape Detection Not Possible"
+        if max_dist - min_dist < 0.02:
+            return "OVAL, glasses: Rectangle, square. Aviators"
+        else: 
+            return "SQUARE, glasses: browline, oval, round"
 
     def calculate_distances(self, filtered_landmarks):
 
@@ -90,7 +94,7 @@ class FaceAnalyzer:
             
             face_shape = self.detect_face_shape(filtered_landmarks)
             cv2.putText(frame, f"Face Shape: {face_shape}", (20, 300), cv2.FONT_HERSHEY_PLAIN,
-                        2, (0, 0, 255), 2)
+                        1, (0, 0, 255), 2)
             cv2.imshow('Face Landmarks', frame)
 
     def process_single_image(self, pil_image):
