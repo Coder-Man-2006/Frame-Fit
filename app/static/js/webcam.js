@@ -1,3 +1,19 @@
+// Update your webcam.js to establish a WebSocket connection
+const socket = io.connect('http://localhost:5000'); // Update the URL to match your Flask app
+
+socket.on('connect', () => {
+console.log('WebSocket connected');
+});
+
+socket.on('disconnect', () => {
+console.log('WebSocket disconnected');
+});
+
+socket.on('processed_frame', (data) => {
+const processedImageElement = document.getElementById('processedImage');
+processedImageElement.src = data.processed_image;
+});
+
 async function openWebcam() {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
