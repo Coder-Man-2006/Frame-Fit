@@ -49,4 +49,8 @@ if __name__ == '__main__':
     
     
     
+<<<<<<< HEAD
     
+=======
+    
+>>>>>>> parent of 0e012dd (integrated frontend and backend)
