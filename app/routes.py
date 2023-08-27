@@ -1,8 +1,9 @@
-from flask import render_template, request, jsonify
+from flask import render_template, request, jsonify, Flask
 from PIL import Image, ImageDraw
-from flask_socketio import SocketIO
-import io
+from flask_socketio import SocketIO, emit
 import base64
+import io
+from PIL import Image
 from algorithm.thealgo import FaceAnalyzer
 
 from app import app
@@ -58,3 +59,38 @@ def handle_disconnect():
 
 if __name__ == '__main__':
     socketio.run(app, debug=True)
+    
+
+# Initialize Flask app and SocketIO
+app = Flask(__name__)
+socketio = SocketIO(app)
+
+@socketio.on('connect')
+def handle_connect():
+    print('WebSocket client connected')
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    print('WebSocket client disconnected')
+
+# Function to process and send webcam frames to the frontend
+def process_webcam_frame(frame_data):
+    try:
+        # Decode base64-encoded frame data
+        header, encoded = frame_data.split(",", 1)
+        binary_data = base64.decodebytes(encoded.encode())
+        image = Image.open(io.BytesIO(binary_data))
+
+        # Process the image using FaceAnalyzer
+        face_analyzer = FaceAnalyzer()
+        processed_image = face_analyzer.process_single_image(image)
+
+        # Convert the processed image to base64
+        buffered = io.BytesIO()
+        processed_image.save(buffered, format="PNG")
+        processed_base64_image = base64.b64encode(buffered.getvalue()).decode('utf-8')
+
+        # Send the processed image to connected clients
+        emit('processed_frame', {'processed_image': f'data:image/png;base64,{processed_base64_image}'})
+    except Exception as e:
+        print("Error processing frame:", e)

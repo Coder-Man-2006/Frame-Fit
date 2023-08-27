@@ -27,6 +27,7 @@ class Skeleton(FaceMap):
 
 class FaceAnalyzer:
     def __init__(self):
+        self.cap = cv2.VideoCapture(0)
         self.mpDraw = mp.solutions.drawing_utils
         self.mpFaceMesh = mp.solutions.face_mesh
         self.faceMesh = self.mpFaceMesh.FaceMesh(max_num_faces=1)
@@ -79,10 +80,6 @@ class FaceAnalyzer:
             distances.append(distance)
 
         return distances
-<<<<<<< HEAD:algorithm/app.py
-=======
-
->>>>>>> 0e012ddcdb7721a5fd088bc6176c857d78da5207:algorithm/thealgo.py
     
     def draw_landmarks(self, frame, filtered_landmarks, distances): 
            # Draw lines for specific measurements
@@ -158,6 +155,8 @@ class FaceAnalyzer:
             imgRGB = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             results = self.faceMesh.process(imgRGB)
                     
+            distances = [None, None, None, None]        
+            
             if results.multi_face_landmarks:
                 for faceLms in results.multi_face_landmarks:
                     face_landmarks = [(int(landmark.x * frame.shape[1]), int(landmark.y * frame.shape[0]))
